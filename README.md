@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-'''
+```
 /opt/codex-app/
 ├── docker-compose.yml
 ├── .env.example
@@ -14,7 +14,7 @@
 │   ├── entrypoint.sh
 │   └── health-check.sh
 └── README.md
-''' 
+``` 
 
 # OpenAI Codex CLI Docker Setup
 
