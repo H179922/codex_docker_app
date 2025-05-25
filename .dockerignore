@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.*
+
+# Documentation
+README.md
+*.md
+
+# Docker
+docker-compose*.yml
+Dockerfile
+
+# Logs and cache
+*.log
+.cache
+.npm
+
+# IDE and OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Workspace content (mounted separately)
+workspace/
