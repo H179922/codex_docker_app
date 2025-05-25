@@ -1,0 +1,58 @@
+version: "3.9"
+
+services:
+  codex:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codex-cli
+    restart: unless-stopped
+    volumes:
+      - ./workspace:/app/workspace:rw
+      - ./scripts:/scripts:ro
+      - codex-cache:/app/.cache
+    environment:
+      - NODE_ENV=development
+      - DEBIAN_FRONTEND=noninteractive
+    env_file:
+      - .env
+    working_dir: /app
+    tty: true
+    stdin_open: true
+    networks:
+      - codex-network
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE
+    read_only: false
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+    labels:
+      - "traefik.enable=false"
+      - "watchtower.enable=true"
+
+  # Optional: Add a simple web interface for monitoring
+  portainer-agent:
+    image: portainer/agent:2.19.4
+    container_name: codex-portainer-agent
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/volumes:/var/lib/docker/volumes:ro
+    networks:
+      - codex-network
+    environment:
+      - AGENT_CLUSTER_ADDR=tasks.portainer-agent
+    profiles:
+      - monitoring
+
+volumes:
+  codex-cache:
+    driver: local
+
+networks:
+  codex-network:
+    driver: bridge
