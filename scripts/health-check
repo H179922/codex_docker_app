@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+
+# Check if Node.js is responding
+if ! command -v node &> /dev/null; then
+    echo "Node.js not found"
+    exit 1
+fi
+
+# Check if Codex CLI is available
+if ! command -v codex &> /dev/null; then
+    echo "Codex CLI not found"
+    exit 1
+fi
+
+# Verify API key is set (without exposing it)
+if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+    echo "OpenAI API key not configured"
+    exit 1
+fi
+
+echo "Health check passed"
+exit 0
