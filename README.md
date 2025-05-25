@@ -1,12 +1,51 @@
 # codex_docker_app
 
+# OpenAI Codex CLI Docker Setup
+
+This repository demonstrates how to run the OpenAI Codex CLI inside a Docker container with your local Windows folder mounted for development. It uses an `.env` file to securely provide your API key and includes `.gitignore` and `.dockerignore` to keep secrets and unnecessary files out of version control.
+
+## Overview
+
+This enhanced setup provides a robust containerized environment for running OpenAI Codex CLI on Debian-based systems with proper security configurations, health monitoring, and development workflow support.
+
+## Features
+
+### 🔒 Security First
+- Non-root user execution with proper permission handling
+- Security options and capability restrictions  
+- Read-only filesystem configurations where applicable
+- Comprehensive input validation and error handling
+
+### 🚀 Production Ready
+- Health checks for container monitoring
+- Restart policies for high availability
+- Version pinning for reproducible deployments
+- Proper logging and error handling mechanisms
+
+### 🔧 Development Integration
+- Environment-based configuration using .env files
+- Workspace volume mounting for persistent development
+- Interactive shell access for debugging
+- Container lifecycle management
+
+### 📊 Monitoring & Management
+- Optional Portainer agent integration
+- Watchtower compatibility for automatic updates
+- Comprehensive health checks and status monitoring
+
+## Quick Start
+
+### Prerequisites
+- Docker Engine 20.10+
+- Docker Compose 2.0+
+- Valid OpenAI API key
+
 ## Project Structure
 
 ```
 /opt/codex-app/
 ├── docker-compose.yml
 ├── .env.example
-├── .env
 ├── .gitignore
 ├── .dockerignore
 ├── Dockerfile
@@ -14,124 +53,110 @@
 │   ├── entrypoint.sh
 │   └── health-check.sh
 └── README.md
-``` 
-
-# OpenAI Codex CLI Docker Setup
-
-This repository demonstrates how to run the OpenAI Codex CLI inside a Docker container with your local Windows folder mounted for development. It uses an `.env` file to securely provide your API key and includes `.gitignore` and `.dockerignore` to keep secrets and unnecessary files out of version control.
-
-
-## 1. Prerequisites
-
-- Docker 
-- A valid OpenAI API key
-
-## 2. Create the `.env` file
-
-In `C:\CodexApp\.env`, add:
-
-```env
-OPENAI_API_KEY=sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
-> **Note:**
->
-> - Never commit the `.env` file to Git.
-> - Rotate or revoke your key by updating this file.
+### Installation
 
-## 3. Add Git and Docker ignores
+```bash
+# Clone the repository
+git clone <your-repo-url> /opt/codex-app
+cd /opt/codex-app
 
-### `.gitignore`
-
-```gitignore
-# Ignore Node modules
-node_modules/
-
-# Ignore environment files
-.env
-
-# Ignore Docker Compose overrides
-docker-compose.override.yml
+# Configure environment
+cp .env.example .env
+# Edit .env with your OpenAI API key
 ```
 
-### `.dockerignore`
+### Configuration
 
-```dockerignore
-# Exclude secrets and VCS from build context
-.env
-.git
-node_modules
+Create your `.env` file based on the example:
+
+```bash
+# OpenAI Configuration
+OPENAI_API_KEY=sk-your-api-key-here
+OPENAI_ORG_ID=org-your-org-id-here
+
+# Application Settings
+LOG_LEVEL=info
+MAX_TOKENS=2048
+TEMPERATURE=0.7
+
+# Security Settings
+CODEX_USER_ID=1000
+CODEX_GROUP_ID=1000
+
+# Optional: Monitoring
+ENABLE_MONITORING=false
 ```
 
-## 4. Write the `Dockerfile`
+### Usage Commands
 
-Create `C:\CodexApp\Dockerfile` with:
+```bash
+# Build and start the container
+docker compose build
+docker compose up -d
 
-```dockerfile
-FROM node:22-slim
+# Verify container health and status
+docker compose ps
+docker compose logs codex
 
-# Set working directory inside container
-WORKDIR /usr/src/app
+# Interactive session for development
+docker compose exec codex bash
 
-# Install the Codex CLI globally
-RUN npm install -g @openai/codex
+# One-off command execution for code generation
+docker compose run --rm codex codex "Generate a Python script for data processing"
 
-# Default to bash for interactive use
-CMD ["bash"]
+# Generate specific code files
+docker compose run --rm codex codex "Create a FastAPI application with authentication"
+
+# Batch processing with workspace mounting
+docker compose run --rm -v $(pwd)/projects:/app/workspace codex bash -c "
+  for prompt in /app/workspace/*.txt; do
+    codex \"$(cat $prompt)\" > \"/app/workspace/generated_$(basename $prompt .txt).py\"
+  done
+"
+
+# Enable monitoring with Portainer integration
+docker compose --profile monitoring up -d
+
+# Code review and optimization
+docker compose run --rm codex codex "Review and optimize the Python code in /app/workspace/main.py"
+
+# Generate documentation
+docker compose run --rm codex codex "Generate comprehensive documentation for the API endpoints"
+
+# Health check and troubleshooting
+docker compose exec codex /scripts/health-check.sh
+
+# Container maintenance and updates
+docker compose down -v
+docker compose pull
+docker compose up -d --force-recreate
+
+# Environment configuration validation
+docker compose config
+
+# Logs monitoring for debugging
+docker compose logs -f codex
+
+# Reset and rebuild for development iterations
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+
+# Generate project structure
+docker compose run --rm codex codex "Create a complete project structure for a Python web application"
+
+# Code testing and validation
+docker compose run --rm codex bash -c "
+  codex 'Generate unit tests for the functions in /app/workspace/utils.py' > /app/workspace/test_utils.py
+"
+
+# Multiple code generation tasks
+docker compose run --rm codex bash -c "
+  echo 'Creating multiple code files...'
+  codex 'Generate a database model for user management' > /app/workspace/models.py
+  codex 'Create API routes for CRUD operations' > /app/workspace/routes.py
+  codex 'Generate configuration management module' > /app/workspace/config.py
+"
 ```
-
-## 5. Write the `docker-compose.yml`
-
-Create `C:\CodexApp\docker-compose.yml`:
-
-```yaml
-version: "3.9"
-
-services:
-  codex:
-    build: .
-    volumes:
-      - C:\\CodexApp:/usr/src/app    # Mount local Windows folder
-    working_dir: /usr/src/app
-    env_file:
-      - .env                       # Load OPENAI_API_KEY from .env
-    tty: true                      # Keep the shell open for interaction
-```
-
-## 6. Build and Run
-
-1. Open PowerShell and navigate to your project folder:
-   ```powershell
-   cd C:\CodexApp
-   ```
-2. Build the Docker image:
-   ```powershell
-   docker-compose build
-   ```
-3. Start an interactive shell session in the container:
-   ```powershell
-   docker-compose run codex
-   ```
-   - You will be at `/usr/src/app` inside the container.
-   - Try verifying your key:
-     ```bash
-     echo $OPENAI_API_KEY
-     ```
-   - Run Codex commands:
-     ```bash
-     codex "Explain what this script does"
-     ```
-4. Run one-off Codex commands without entering the shell:
-   ```powershell
-   docker-compose run codex codex "Generate a Node.js HTTP server"
-   ```
-
-## 7. Tips and Notes
-
-- **Editing Locally:** Any edits you make in `C:\Working` are immediately available inside the container.
-- **Safety:** Secrets never get baked into the image or committed to Git.
-- **Extensibility:** You can add other services (databases, caches) to the `docker-compose.yml` later.
-
----
-
-Happy coding with OpenAI Codex in Docker!
